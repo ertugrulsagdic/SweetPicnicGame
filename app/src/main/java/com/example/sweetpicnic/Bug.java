@@ -8,7 +8,11 @@ public class Bug {
     private Bitmap bug1Image, bug2Image, deadBugImage;
     private float bugRadius;
 
-    public Bug(int width, int bugY, float bugRadius, Bitmap bug1Image, Bitmap bug2Image, Bitmap deadBugImage) {
+
+    private int magnitude;
+    private int accelerationX;
+
+    public Bug(int width, int bugY, float bugRadius, Bitmap bug1Image, Bitmap bug2Image, Bitmap deadBugImage, int magnitude) {
         this.bugX = randomWidth(width);
         this.bugY = bugY;
         this.bugRadius = bugRadius;
@@ -16,6 +20,8 @@ public class Bug {
         this.bug2Image = bug2Image;
         this.deadBugImage = deadBugImage;
         this.isBugDead = false;
+        this.magnitude = magnitude;
+        this.accelerationX = 0;
     }
 
     private int randomWidth(int width) {
@@ -70,5 +76,20 @@ public class Bug {
         this.isBugDead = isBugDead;
     }
 
+    public int getMagnitude() {
+        return magnitude;
+    }
+
+    public void setMagnitude(int magnitude) {
+        this.magnitude = magnitude;
+    }
+
+    public int getAccelerationX() {
+        return accelerationX;
+    }
+
+    public void setAccelerationX(int accelerationX) {
+        this.accelerationX = accelerationX;
+    }
 
 }

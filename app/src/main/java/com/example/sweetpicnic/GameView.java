@@ -5,6 +5,7 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Build;
+import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -14,11 +15,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     int x, y;
     private MainThread t = null;
     Context context;
+    int numberOfSoundsLoaded = 0;
+
+    Handler handler;
 
     // Constructor
-    public GameView(Context context) {
+    public GameView(Context context, Handler handler) {
         super(context);
         this.context = context;
+        this.handler = handler;
         // Init variables
         x = y = 0;
         // Retrieve the SurfaceHolder instance associated with this SurfaceView.
@@ -28,7 +33,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         // initialize the sound pool
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            Assets.soundPool = new SoundPool(6, AudioManager.STREAM_MUSIC, 0);
+            Assets.soundPool = new SoundPool(7, AudioManager.STREAM_MUSIC, 0);
         } else {
             AudioAttributes attributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_GAME)
@@ -37,15 +42,26 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
             Assets.soundPool = new SoundPool.Builder()
                     .setAudioAttributes(attributes)
-                    .setMaxStreams(6)
+                    .setMaxStreams(7)
                     .build();
         }
+
+        Assets.soundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
+            numberOfSoundsLoaded++;
+            if (numberOfSoundsLoaded == 7) {
+
+                System.out.println("Is Loaded Inside: " + true);
+            }
+        });
         // load the sounds
         Assets.thump = Assets.soundPool.load(context, R.raw.thump, 1);
         Assets.squish1 = Assets.soundPool.load(context, R.raw.squish1, 1);
         Assets.squish2 = Assets.soundPool.load(context, R.raw.squish3, 1);
         Assets.squish3 = Assets.soundPool.load(context, R.raw.squish3, 1);
+        Assets.eatFood =  Assets.soundPool.load(context, R.raw.eat_food, 1);
         Assets.getReady = Assets.soundPool.load(context, R.raw.get_ready, 1);
+        Assets.gameOver = Assets.soundPool.load(context, R.raw.game_over, 1);
+
 
     }
 
@@ -86,7 +102,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated (SurfaceHolder holder) {
         // Create and start a drawing thread whose Runnable object is defined by this class (MainView)
         if (t == null) {
-            t = new MainThread(holder, context);
+            t = new MainThread(holder, context, handler);
             t.setRunning(true);
             t.start();
             setFocusable(true); // make sure we get events
