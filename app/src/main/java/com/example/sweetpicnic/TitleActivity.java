@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 public class TitleActivity extends AppCompatActivity  implements View.OnClickListener {
 
-    Button startButton;
+    Button startButton, preferencesButton;
     LinearLayout highScoreLayout;
     TextView highScoreText;
 
@@ -25,13 +25,13 @@ public class TitleActivity extends AppCompatActivity  implements View.OnClickLis
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         startButton = findViewById(R.id.start_button);
+        preferencesButton = findViewById(R.id.preferences_button);
         highScoreLayout = findViewById(R.id.high_score_layout);
         highScoreText = findViewById(R.id.high_score_text);
 
         startButton.setOnClickListener(this);
+        preferencesButton.setOnClickListener(this);
         highScoreLayout.setOnClickListener(this);
-
-        playMusic();
     }
 
     @Override
@@ -79,13 +79,19 @@ public class TitleActivity extends AppCompatActivity  implements View.OnClickLis
 
         switch (v.getId()) {
             case R.id.start_button:
-
                 Intent intent = new Intent(this, GameActivity.class);
                 startActivity(intent);
+
+                Assets.mediaPlayer.pause();
+
                 break;
             case R.id.high_score_layout:
                 Intent intent2 = new Intent(this, HighScoreActivity.class);
                 startActivity(intent2);
+                break;
+            case R.id.preferences_button:
+                Intent intent3 = new Intent(this, PreferencesActivity.class);
+                startActivity(intent3);
                 break;
         }
 
