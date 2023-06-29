@@ -13,7 +13,7 @@ public class MainThread extends Thread {
     int tx, ty;
     private static final Object lock = new Object();
     boolean initialized, touched, isDead;
-    Bitmap bug1, bug2, dead_bug, floor;
+    Bitmap bug1, bug2, dead_bug, floor, lives[];
     Context context;
     int accelerationX, accelerationY, magnitude;
     int currentAngle;
@@ -31,6 +31,7 @@ public class MainThread extends Thread {
         currentAngle = 0;
         touched = false;
         isDead = false;
+        lives = new Bitmap[3];
     }
 
     public void setRunning(boolean b) {
@@ -118,6 +119,14 @@ public class MainThread extends Thread {
 
             floor = Bitmap.createScaledBitmap(bmp, canvas.getWidth(), canvas.getHeight(), false);
 
+
+            bmp = BitmapFactory.decodeResource (context.getResources(), R.drawable.life);
+
+            float hearthScaleRatio = 0.1f;
+            lives[0] = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
+            lives[1] = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
+            lives[2] = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
+
             bmp = null;
 
             initialized = true;
@@ -130,6 +139,9 @@ public class MainThread extends Thread {
         loadGraphics(canvas);
 
         canvas.drawBitmap(floor, 0, 0, null);
+        canvas.drawBitmap(lives[0], 0, 0, null);
+        canvas.drawBitmap(lives[1], lives[0].getWidth(), 0, null);
+        canvas.drawBitmap(lives[2], lives[0].getWidth()*2, 0, null);
 
         long time = System.currentTimeMillis() / 100 % 10;
 

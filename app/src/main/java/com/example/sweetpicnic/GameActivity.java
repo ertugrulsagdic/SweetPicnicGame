@@ -46,7 +46,6 @@ public class GameActivity extends AppCompatActivity {
     private void playBackgroundMusic() {
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
         boolean b = preferences.getBoolean("key_music_enabled", true);
         if (b == true) {
             if (Assets.mediaPlayer != null) {
