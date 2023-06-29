@@ -2,8 +2,11 @@ package com.example.sweetpicnic;
 
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.example.sweetpicnic.R;
@@ -27,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }, 2000);
+
+
     }
 
     private void runAfter() {

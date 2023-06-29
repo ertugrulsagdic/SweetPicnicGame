@@ -71,11 +71,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         int action = event.getAction();
         x = event.getX();
         y = event.getY();
-//		if (action==MotionEvent.ACTION_MOVE) {
-//		}
-//		if (action==MotionEvent.ACTION_DOWN){
-//		}
-        if (action == MotionEvent.ACTION_UP) {
+
+        if (action == MotionEvent.ACTION_DOWN) {
             if (t != null)
                 t.setXY ((int)x, (int)y);
         }
