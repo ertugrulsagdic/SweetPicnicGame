@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.content.res.ResourcesCompat;
 import android.view.SurfaceHolder;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,6 +135,13 @@ public class MainThread extends Thread {
             if (highScore > 0  && !hasHighScorePassed) {
                 Assets.soundPool.play(Assets.highScore, 1, 1, 1, 0, 1);
 
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "Awesome! New high score. Keep going", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
                 hasHighScorePassed = true;
             }
 
@@ -221,7 +229,6 @@ public class MainThread extends Thread {
     }
 
     private void addBugs(Canvas canvas) {
-        System.out.println("Old: " + aliveBugNum);
         int numberOfBugs = generator.nextInt(MAX_BUGS_NUM - MIN_BUGS_NUM + 1) + MIN_BUGS_NUM;
         for (int i = 0; i < numberOfBugs; i++) {
             int randomMagnitude = generator.nextInt(5) + 2;
@@ -229,7 +236,6 @@ public class MainThread extends Thread {
             bugs.add(bug);
             aliveBugNum++;
         }
-        System.out.println("New: " + aliveBugNum);
     }
 
     private void renderBackground(Canvas canvas) {
@@ -347,16 +353,17 @@ public class MainThread extends Thread {
 
     private void playBackgroundMusic() {
 
-        boolean b = preferences.getBoolean("key_music_enabled", true);
-        if (b == true) {
-            if (Assets.mediaPlayer != null) {
-                Assets.mediaPlayer.release();
-                Assets.mediaPlayer = null;
-            }
+        if (Assets.mediaPlayer != null) {
+            Assets.mediaPlayer.release();
+            Assets.mediaPlayer = null;
         }
         Assets.mediaPlayer = MediaPlayer.create(context, R.raw.music);
         Assets.mediaPlayer.setLooping(true);
+        boolean b = preferences.getBoolean("key_music_enabled", true);
+        System.out.println("music enabled: " + b);
+        if (b == true) {
         Assets.mediaPlayer.start();
+        }
     }
 
 }

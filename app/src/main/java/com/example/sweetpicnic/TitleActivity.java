@@ -49,13 +49,14 @@ public class TitleActivity extends AppCompatActivity implements View.OnClickList
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         boolean musicEnabled = preferences.getBoolean("key_music_enabled", true);
+        if (Assets.mediaPlayer != null) {
+            Assets.mediaPlayer.release();
+            Assets.mediaPlayer = null;
+        }
+        Assets.mediaPlayer = MediaPlayer.create(this, R.raw.music_menu);
+        Assets.mediaPlayer.setLooping(true);
+
         if (musicEnabled == true) {
-            if (Assets.mediaPlayer != null) {
-                Assets.mediaPlayer.release();
-                Assets.mediaPlayer = null;
-            }
-            Assets.mediaPlayer = MediaPlayer.create(this, R.raw.music_menu);
-            Assets.mediaPlayer.setLooping(true);
             Assets.mediaPlayer.start();
         }
     }
