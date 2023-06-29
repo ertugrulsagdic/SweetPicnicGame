@@ -11,13 +11,15 @@ public class MainThread extends Thread {
     int x, y;
     int tx, ty;
     boolean initialized, touched, isDead;
-    Bitmap bug1, bug2, dead_bug, floor, lives[], foodBar;
+    Bitmap bug1, bug2, dead_bug, floor, life, foodBar;
     Context context;
     int accelerationX, accelerationY, magnitude;
     int currentAngle;
     float bugRadius;
     private SurfaceHolder holder;
     private boolean isRunning = false;
+
+    int livesLeft;
 
 
     public MainThread(SurfaceHolder surfaceHolder, Context context) {
@@ -31,7 +33,7 @@ public class MainThread extends Thread {
         currentAngle = 0;
         touched = false;
         isDead = false;
-        lives = new Bitmap[3];
+        livesLeft = 3;
     }
 
     public void setRunning(boolean b) {
@@ -124,15 +126,12 @@ public class MainThread extends Thread {
             bmp = BitmapFactory.decodeResource (context.getResources(), R.drawable.life);
 
             float hearthScaleRatio = 0.1f;
-            lives[0] = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
-            lives[1] = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
-            lives[2] = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
+            life = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
 
             bmp = BitmapFactory.decodeResource (context.getResources(), R.drawable.food_bar);
-            newWidth = (int) (canvas.getWidth() * 0.2f);
-            scaleFact = (float) newWidth / bmp.getWidth();
-            newHeight = (int) (bmp.getHeight() * scaleFact);
-            foodBar = Bitmap.createScaledBitmap(bmp, bmp.getWidth(), bmp.getHeight(), false);
+            newWidth = canvas.getWidth();
+            newHeight = (int) (canvas.getHeight() * 0.1f);
+            foodBar = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
 
             bmp = null;
@@ -148,10 +147,10 @@ public class MainThread extends Thread {
 
         canvas.drawBitmap(floor, 0, 0, null);
         canvas.drawBitmap(foodBar, 0, (int)(canvas.getHeight()-foodBar.getHeight()), null);
-        canvas.drawBitmap(lives[0], 0, 0, null);
-        canvas.drawBitmap(lives[1], lives[0].getWidth(), 0, null);
-        canvas.drawBitmap(lives[2], lives[0].getWidth()*2, 0, null);
 
+        for (int i = 0; i < livesLeft; i++) {
+            canvas.drawBitmap(life, i*life.getWidth() + (i + 1) * 10,   0, null);
+        }
 
         long time = System.currentTimeMillis() / 100 % 10;
 
@@ -176,25 +175,11 @@ public class MainThread extends Thread {
                 }
 
                 if (y >= canvas.getHeight() - bug1.getHeight()) {
-                    accelerationY = -magnitude;
-                } else if (y <= 0) {
-                    accelerationY = magnitude;
-                } else {
-                    if (time % 10 == 0) {
-                        double rand = Math.random();
-                        if (rand < 0.4)
-                            accelerationY = magnitude;
-                        else if (rand > 0.4 && rand < 0.8)
-                            accelerationY = -magnitude;
-                        else
-                            accelerationY = 0;
-                    }
+                    y = 0;
                 }
 
-                if (accelerationX == 0 && accelerationY == 0) {
-                    accelerationX = magnitude;
-                    accelerationY = magnitude;
-                }
+                accelerationY = magnitude;
+
                 x += accelerationX;
                 y += accelerationY;
 
