@@ -10,8 +10,8 @@ import com.example.sweetpicnic.R;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Handler handler = new Handler();
     boolean quit;
+    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle inBundle) {

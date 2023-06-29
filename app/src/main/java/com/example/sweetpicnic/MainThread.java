@@ -67,7 +67,7 @@ public class MainThread extends Thread {
     private void update(Canvas canvas) {
         if (touched) {
             if (TouchInCircle(x, y)) {
-                Assets.soundPool.play(Assets.squish, 1, 1, 1, 0, 1);
+                Assets.playSquishSound();
                 isDead = true;
             } else {
                 Assets.soundPool.play(Assets.thump, 1, 1, 1, 0, 1);
