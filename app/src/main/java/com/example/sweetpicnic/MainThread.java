@@ -7,20 +7,20 @@ import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
 public class MainThread extends Thread {
-    private SurfaceHolder holder;
-    private boolean isRunning = false;
+    private static final Object lock = new Object();
     int x, y;
     int tx, ty;
-    private static final Object lock = new Object();
     boolean initialized, touched, isDead;
     Bitmap bug1, bug2, dead_bug, floor;
     Context context;
     int accelerationX, accelerationY, magnitude;
     int currentAngle;
     float bugRadius;
+    private SurfaceHolder holder;
+    private boolean isRunning = false;
 
 
-    public MainThread (SurfaceHolder surfaceHolder, Context context) {
+    public MainThread(SurfaceHolder surfaceHolder, Context context) {
         holder = surfaceHolder;
         this.context = context;
         x = y = 0;
@@ -37,7 +37,7 @@ public class MainThread extends Thread {
         isRunning = b;
     }
 
-    public void setXY (int x, int y) {
+    public void setXY(int x, int y) {
         synchronized (lock) {
             this.tx = x;
             this.ty = y;
@@ -78,9 +78,10 @@ public class MainThread extends Thread {
     }
 
     private boolean TouchInCircle(int x, int y) {
-
+        int centerX = x + bug1.getWidth() / 2;
+        int centerY = y + bug1.getHeight() / 2;
         // find distance between touch and center of bug
-        double dist = Math.sqrt((tx - x) * (tx - x) + (ty - y) * (ty - y));
+        double dist = Math.sqrt((tx - centerX) * (tx - centerX) + (ty - centerY) * (ty - centerY));
 
         if (dist < bugRadius) {
             return true;
@@ -92,7 +93,7 @@ public class MainThread extends Thread {
 
     private void loadGraphics(Canvas canvas) {
         if (!initialized) {
-            Bitmap bmp = BitmapFactory.decodeResource (context.getResources(), R.drawable.spider1);
+            Bitmap bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider1);
 
             int newWidth = (int) (canvas.getWidth() * 0.2f);
 
@@ -106,15 +107,15 @@ public class MainThread extends Thread {
 
             bug1 = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
-            bmp = BitmapFactory.decodeResource (context.getResources(), R.drawable.spider2);
+            bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider2);
 
             bug2 = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
-            bmp = BitmapFactory.decodeResource (context.getResources(), R.drawable.spider_dead);
+            bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider_dead);
 
             dead_bug = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
-            bmp = BitmapFactory.decodeResource (context.getResources(), R.drawable.background);
+            bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.background);
 
             floor = Bitmap.createScaledBitmap(bmp, canvas.getWidth(), canvas.getHeight(), false);
 
@@ -125,7 +126,7 @@ public class MainThread extends Thread {
     }
 
 
-    private void render (Canvas canvas) {
+    private void render(Canvas canvas) {
         int xx, yy;
         loadGraphics(canvas);
 
@@ -133,11 +134,9 @@ public class MainThread extends Thread {
 
         long time = System.currentTimeMillis() / 100 % 10;
 
-
         if (!isDead) {
             // Draw a white circle at position (100, 100) with a radius of 100
             synchronized (lock) {
-
 
                 if (x >= canvas.getWidth() - bug1.getWidth()) {
                     accelerationX = -magnitude;
@@ -177,7 +176,6 @@ public class MainThread extends Thread {
                 }
                 x += accelerationX;
                 y += accelerationY;
-
 
                 xx = x;
                 yy = y;
