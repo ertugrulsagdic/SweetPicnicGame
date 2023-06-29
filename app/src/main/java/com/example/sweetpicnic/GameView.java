@@ -42,7 +42,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
         // load the sounds
         Assets.thump = Assets.soundPool.load(context, R.raw.thump, 1);
-        Assets.squish = Assets.soundPool.load(context, R.raw.squish, 1);
+        Assets.squish1 = Assets.soundPool.load(context, R.raw.squish1, 1);
+        Assets.squish2 = Assets.soundPool.load(context, R.raw.squish3, 1);
+        Assets.squish3 = Assets.soundPool.load(context, R.raw.squish3, 1);
         Assets.getReady = Assets.soundPool.load(context, R.raw.get_ready, 1);
 
     }
