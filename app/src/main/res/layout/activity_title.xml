@@ -11,28 +11,70 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@color/background_green">
+        android:background="@color/background_green"
+        android:padding="20px">
 
         <ImageView
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_height="280dp"
             android:layout_gravity="center_horizontal"
-            app:srcCompat="@drawable/title"
-            />
+            app:srcCompat="@drawable/title" />
 
-        <Button
-            android:id="@+id/start_button"
-            android:layout_width="fill_parent"
+    <LinearLayout
+        android:id="@+id/high_score_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="center_horizontal">
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Start Game"
-            android:padding="10pt"/>
+            android:text="High Score"
+            android:textColor="@color/white"
+            android:fontFamily="@font/press_start_2p"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:paddingTop="50px"
+            android:paddingBottom="25px"/>
 
-        <Button
-            android:id="@+id/preferences_button"
-            android:layout_width="fill_parent"
+        <TextView
+            android:id="@+id/high_score_text"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Preferences"
-            android:padding="10pt"/>
+            android:fontFamily="@font/press_start_2p"
+            android:text="0"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:paddingBottom="50px"/>
+
+    </LinearLayout>
+
+            <Button
+                android:id="@+id/start_button"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                app:backgroundTint="@color/orange"
+                android:padding="10pt"
+                android:text="Start Game"
+                android:textColor="@color/white"
+                android:fontFamily="@font/press_start_2p"
+                android:textStyle="bold"
+                android:layout_marginBottom="20px"/>
+
+            <Button
+                android:id="@+id/preferences_button"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                app:backgroundTint="@color/dark_green"
+                android:padding="10pt"
+                android:text="Preferences"
+                android:textColor="@color/white"
+                android:fontFamily="@font/press_start_2p"
+                android:textStyle="bold" />
+
 
     </LinearLayout>
 </RelativeLayout>

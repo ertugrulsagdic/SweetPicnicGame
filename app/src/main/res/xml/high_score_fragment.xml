@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="High Score Information"
+        >
+        <Preference
+            android:title="High Score"
+            android:summary="0"
+            android:selectable="false"
+            android:key="high_score_text"/>
+
+        <Preference
+            android:title="Reset High Score"
+            android:summary="Clisk here to reset High Score"
+            android:key="reset_high_score"/>
+
+
+    </PreferenceCategory>
+</PreferenceScreen>
