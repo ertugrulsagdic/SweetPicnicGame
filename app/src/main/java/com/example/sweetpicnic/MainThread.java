@@ -38,6 +38,10 @@ public class MainThread extends Thread {
     int score;
     boolean startPlaying;
 
+    int countDown;
+
+    long startTime;
+
     public MainThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
         holder = surfaceHolder;
         this.context = context;
@@ -49,6 +53,8 @@ public class MainThread extends Thread {
         livesLeft = 3;
         startPlaying = false;
         score = 0;
+        countDown = 3;
+        startTime = System.currentTimeMillis() / 1000;
     }
 
     public void setRunning(boolean b) {
@@ -93,21 +99,23 @@ public class MainThread extends Thread {
                     if (startPlaying) {
                         renderBugs(canvas);
                     } else {
-
-                        long endTime = System.currentTimeMillis() / 1000 + 4;
-                        renderCountdown(canvas, endTime);
+                        renderCountdown(canvas);
                     }
 
+                    if (livesLeft == 0 && !gameOver) {
+                        setLives(canvas);
+                        Assets.mediaPlayer.pause();
+                        Assets.soundPool.play(Assets.gameOver, 1, 1, 1,0, 1);
+                        gameOver = true;
+                    }
+
+                    if (gameOver) {
+                        renderGameOver(canvas);
+                    }
 
                     // After drawing, unlock the canvas and display it
                     holder.unlockCanvasAndPost(canvas);
 
-                    if (livesLeft == 0 && !gameOver) {
-                        Assets.mediaPlayer.pause();
-                        Assets.soundPool.play(Assets.gameOver, 1, 1, 1,0, 1);
-                        setLives(canvas);
-                        gameOver = true;
-                    }
                 }
             }
 
@@ -115,7 +123,7 @@ public class MainThread extends Thread {
     }
 
     private void update() {
-        if (touched) {
+        if (touched && !gameOver) {
             boolean isTouchToBug = false;
 
             for (Bug bug : bugs) {
@@ -224,7 +232,6 @@ public class MainThread extends Thread {
                     if (!gameOver) {
                         setBugXY(canvas, bug, curTime);
                     }
-//                    rotateAccordingToAcceleration(canvas, bug);
 
                     if (curTime % 2 == 0) {
                         canvas.drawBitmap(bug.getBug1Image(), bug.getBugX(), bug.getBugY(), null);
@@ -247,21 +254,28 @@ public class MainThread extends Thread {
         }
     }
 
-    private void renderCountdown(Canvas canvas, long endTime) {
+    private void renderCountdown(Canvas canvas) {
         // count from 3
-        int countDown = 3;
         long curTime = System.currentTimeMillis() / 1000;
 
-        if (curTime < endTime) {
+        long time = curTime - startTime;
+        if (time > 1 && time <= 4) {
             Paint paint = new Paint();
             paint.setColor(Color.WHITE);
-            paint.setTextSize(400);
+            paint.setTextSize(200);
             paint.setTypeface(ResourcesCompat.getFont(context, R.font.press_start_2p));
-            canvas.drawText(String.valueOf(countDown), canvas.getWidth() / 2 - 100, canvas.getHeight() / 2, paint);
+            canvas.drawText(String.valueOf(5 - (curTime - startTime)), canvas.getWidth() / 2 - 100, canvas.getHeight() / 2, paint);
         }
+    }
 
-
-
+    private void renderGameOver(Canvas canvas) {
+        Paint paint = new Paint();
+        paint.setColor(Color.WHITE);
+        int width = canvas.getWidth();
+        int textSize = width / 16;
+        paint.setTextSize(textSize);
+        paint.setTypeface(ResourcesCompat.getFont(context, R.font.press_start_2p));
+        canvas.drawText("Game Over!", canvas.getWidth() / 2 - 300, canvas.getHeight() / 2, paint);
     }
 
     private void setBugXY(Canvas canvas, Bug bug, long curTime) {

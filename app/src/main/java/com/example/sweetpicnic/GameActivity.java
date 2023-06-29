@@ -33,6 +33,7 @@ public class GameActivity extends AppCompatActivity {
     public void onBackPressed() {
         // On back button pressed go to title activity
         handler.removeCallbacksAndMessages(null);
+        Assets.soundPool.autoPause();
         Intent intent = new Intent(this, TitleActivity.class);
         startActivity(intent);
         super.onBackPressed();
