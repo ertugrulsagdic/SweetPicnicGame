@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.view.WindowManager;
 
 public class GameActivity extends AppCompatActivity {
     GameView v = null;
+    Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,9 +61,30 @@ public class GameActivity extends AppCompatActivity {
 
     }
 
+    private void playGetReady() {
+
+
+        if (Assets.mediaPlayer != null) {
+            Assets.mediaPlayer.release();
+            Assets.mediaPlayer = null;
+        }
+        Assets.mediaPlayer = MediaPlayer.create(this, R.raw.get_ready);
+        Assets.mediaPlayer.setLooping(true);
+        Assets.mediaPlayer.start();
+
+    }
     @Override
     protected void onResume () {
-        playBackgroundMusic();
+
+        playGetReady();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                playBackgroundMusic();
+
+            }
+        }, 5000);
+
         super.onResume();
         if (v != null)
             v.resume();
