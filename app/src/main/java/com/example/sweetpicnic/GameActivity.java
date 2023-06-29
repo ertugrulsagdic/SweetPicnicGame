@@ -2,6 +2,9 @@ package com.example.sweetpicnic;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.MediaPlayer;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -39,8 +42,27 @@ public class GameActivity extends AppCompatActivity {
             v.pause();
     }
 
+
+    private void playBackgroundMusic() {
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        boolean b = preferences.getBoolean("key_music_enabled", true);
+        if (b == true) {
+            if (Assets.mediaPlayer != null) {
+                Assets.mediaPlayer.release();
+                Assets.mediaPlayer = null;
+            }
+        }
+        Assets.mediaPlayer = MediaPlayer.create(this, R.raw.music);
+        Assets.mediaPlayer.setLooping(true);
+        Assets.mediaPlayer.start();
+
+    }
+
     @Override
     protected void onResume () {
+        playBackgroundMusic();
         super.onResume();
         if (v != null)
             v.resume();
