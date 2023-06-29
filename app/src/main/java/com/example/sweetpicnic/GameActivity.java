@@ -1,6 +1,7 @@
 package com.example.sweetpicnic;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,6 +24,15 @@ public class GameActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        // On back button pressed go to title activity
+        Intent intent = new Intent(this, TitleActivity.class);
+        startActivity(intent);
+        super.onBackPressed();
+
+    }
+
+    @Override
     protected void onPause () {
         super.onPause();
         if (v != null)
@@ -35,4 +45,6 @@ public class GameActivity extends AppCompatActivity {
         if (v != null)
             v.resume();
     }
+
+
 }
