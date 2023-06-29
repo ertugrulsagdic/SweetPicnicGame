@@ -20,11 +20,11 @@ import java.util.Random;
 
 public class MainThread extends Thread {
     private static final Object lock = new Object();
-    private final int MAX_BUGS_NUM = 10;
+    private final int MAX_BUGS_NUM = 7;
     private final int MIN_BUGS_NUM = 2;
-    int tx, ty;
+    int touchX, touchY;
     boolean initialized, touched, gameOver;
-    Bitmap floor, life, foodBar;
+    Bitmap bug1Image, bug2Image, deadBugImage, floor, life, foodBar;
     Context context;
 
     Handler handler;
@@ -38,6 +38,7 @@ public class MainThread extends Thread {
     private boolean isRunning = false;
     private List<Bug> bugs = new ArrayList<>();
     long startTime;
+    private int aliveBugNum = 0;
 
     SharedPreferences preferences;
 
@@ -64,8 +65,8 @@ public class MainThread extends Thread {
 
     public void setXY(int x, int y) {
         synchronized (lock) {
-            this.tx = x;
-            this.ty = y;
+            this.touchX = x;
+            this.touchY = y;
             touched = true;
         }
     }
@@ -98,6 +99,10 @@ public class MainThread extends Thread {
                     // Perform drawing operations on the canvas
                     renderBackground(canvas);
 
+                    if (aliveBugNum <= 2) {
+                        addBugs(canvas);
+                    }
+
                     if (startPlaying) {
                         renderBugs(canvas);
                     } else {
@@ -107,7 +112,7 @@ public class MainThread extends Thread {
                     if (livesLeft == 0 && !gameOver) {
                         setLives(canvas);
                         Assets.mediaPlayer.pause();
-                        Assets.soundPool.play(Assets.gameOver, 1, 1, 1,0, 1);
+                        Assets.soundPool.play(Assets.gameOver, 1, 1, 1, 0, 1);
                         gameOver = true;
                     }
 
@@ -156,6 +161,7 @@ public class MainThread extends Thread {
                     checkHighScore();
 
                     isTouchToBug = true;
+                    aliveBugNum--;
                 }
             }
 
@@ -170,7 +176,7 @@ public class MainThread extends Thread {
     private boolean touchInCircle(Bug bug) {
         int centerX = bug.getBugX() + bug.getBug1Image().getWidth() / 2;
         int centerY = bug.getBugY() + bug.getBug1Image().getHeight() / 2;
-        double dis = Math.sqrt((this.tx - centerX) * (this.tx - centerX) + (this.ty - centerY) * (this.ty - centerY));
+        double dis = Math.sqrt((this.touchX - centerX) * (this.touchX - centerX) + (this.touchY - centerY) * (this.touchY - centerY));
 
         return dis <= this.bugRadius;
     }
@@ -188,21 +194,16 @@ public class MainThread extends Thread {
         float scaleFactor = (float) newWidth / bmp.getWidth();
         int newHeight = (int) (bmp.getHeight() * scaleFactor);
 
-        Bitmap bug1Image = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
+        this.bug1Image = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
         this.bugRadius = newWidth / 2;
 
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider2);
-        Bitmap bug2Image = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
+        this.bug2Image = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider_dead);
-        Bitmap deadBugImage = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
+        this.deadBugImage = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
-        int numberOfBugs = generator.nextInt(MAX_BUGS_NUM - MIN_BUGS_NUM + 1) + MIN_BUGS_NUM;
-        for (int i = 0; i < numberOfBugs; i++) {
-            int randomMagnitude = generator.nextInt(5) + 2;
-            Bug bug = new Bug(canvas.getWidth(), 0, this.bugRadius, bug1Image, bug2Image, deadBugImage, randomMagnitude);
-            bugs.add(bug);
-        }
+        addBugs(canvas);
 
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.background);
         floor = Bitmap.createScaledBitmap(bmp, canvas.getWidth(), canvas.getHeight(), false);
@@ -217,6 +218,18 @@ public class MainThread extends Thread {
         foodBar = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
         bmp = null;
+    }
+
+    private void addBugs(Canvas canvas) {
+        System.out.println("Old: " + aliveBugNum);
+        int numberOfBugs = generator.nextInt(MAX_BUGS_NUM - MIN_BUGS_NUM + 1) + MIN_BUGS_NUM;
+        for (int i = 0; i < numberOfBugs; i++) {
+            int randomMagnitude = generator.nextInt(5) + 2;
+            Bug bug = new Bug(canvas.getWidth(), 0, this.bugRadius, this.bug1Image, this.bug2Image, this.deadBugImage, randomMagnitude);
+            bugs.add(bug);
+            aliveBugNum++;
+        }
+        System.out.println("New: " + aliveBugNum);
     }
 
     private void renderBackground(Canvas canvas) {
@@ -332,7 +345,6 @@ public class MainThread extends Thread {
         bug.setBugY(bugY);
     }
 
-
     private void playBackgroundMusic() {
 
         boolean b = preferences.getBoolean("key_music_enabled", true);
@@ -345,7 +357,6 @@ public class MainThread extends Thread {
         Assets.mediaPlayer = MediaPlayer.create(context, R.raw.music);
         Assets.mediaPlayer.setLooping(true);
         Assets.mediaPlayer.start();
-
     }
 
 }
