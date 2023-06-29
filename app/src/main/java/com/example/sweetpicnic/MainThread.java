@@ -22,7 +22,6 @@ public class MainThread extends Thread {
     private static final Object lock = new Object();
     private final int MAX_BUGS_NUM = 10;
     private final int MIN_BUGS_NUM = 2;
-    int x, y;
     int tx, ty;
     boolean initialized, touched, gameOver;
     Bitmap floor, life, foodBar;
@@ -33,18 +32,20 @@ public class MainThread extends Thread {
     float bugRadius;
     Random generator = new Random();
     int livesLeft;
-    int score;
-    boolean startPlaying;
+    int score, highScore;
+    boolean startPlaying, hasHighScorePassed;
     private SurfaceHolder holder;
     private boolean isRunning = false;
     private List<Bug> bugs = new ArrayList<>();
     long startTime;
 
-    public MainThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
+    SharedPreferences preferences;
+
+    public MainThread(SurfaceHolder surfaceHolder, Context context, Handler handler, SharedPreferences preferences) {
         holder = surfaceHolder;
         this.context = context;
         this.handler = handler;
-        x = y = 0;
+        this.preferences = preferences;
         initialized = false;
         currentAngle = 0;
         touched = false;
@@ -52,6 +53,9 @@ public class MainThread extends Thread {
         startPlaying = false;
         score = 0;
         startTime = System.currentTimeMillis() / 1000;
+        hasHighScorePassed = false;
+
+        highScore = preferences.getInt("high_score", 0);
     }
 
     public void setRunning(boolean b) {
@@ -120,6 +124,21 @@ public class MainThread extends Thread {
         }
     }
 
+    private void checkHighScore() {
+        if (score > highScore) {
+            if (highScore > 0  && !hasHighScorePassed) {
+                Assets.soundPool.play(Assets.highScore, 1, 1, 1, 0, 1);
+
+                hasHighScorePassed = true;
+            }
+
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putInt("high_score", score);
+            editor.apply();
+
+        }
+    }
+
     private void update() {
         if (touched && !gameOver) {
             boolean isTouchToBug = false;
@@ -133,6 +152,9 @@ public class MainThread extends Thread {
                     Assets.playSquishSound();
                     bug.setBugDead(true);
                     score++;
+
+                    checkHighScore();
+
                     isTouchToBug = true;
                 }
             }
@@ -266,7 +288,9 @@ public class MainThread extends Thread {
             paint.setColor(Color.WHITE);
             paint.setTextSize(200);
             paint.setTypeface(ResourcesCompat.getFont(context, R.font.press_start_2p));
-            canvas.drawText(String.valueOf(5 - (curTime - startTime)), canvas.getWidth() / 2 - 100, canvas.getHeight() / 2, paint);
+            String text = String.valueOf(5 - (curTime - startTime));
+            int textWidth = (int) paint.measureText(text);
+            canvas.drawText(text, canvas.getWidth() / 2 - textWidth / 2, canvas.getHeight() / 2, paint);
         }
     }
 
@@ -277,7 +301,8 @@ public class MainThread extends Thread {
         int textSize = width / 16;
         paint.setTextSize(textSize);
         paint.setTypeface(ResourcesCompat.getFont(context, R.font.press_start_2p));
-        canvas.drawText("Game Over!", canvas.getWidth() / 2 - 300, canvas.getHeight() / 2, paint);
+        int textWidth = (int) paint.measureText("Game Over!");
+        canvas.drawText("Game Over!", canvas.getWidth() / 2 - textWidth / 2, canvas.getHeight() / 2, paint);
     }
 
     private void setBugXY(Canvas canvas, Bug bug, long curTime) {
@@ -310,7 +335,6 @@ public class MainThread extends Thread {
 
     private void playBackgroundMusic() {
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         boolean b = preferences.getBoolean("key_music_enabled", true);
         if (b == true) {
             if (Assets.mediaPlayer != null) {

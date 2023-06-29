@@ -6,7 +6,7 @@ import android.media.SoundPool;
 public class Assets {
     public static MediaPlayer mediaPlayer;
     public static SoundPool soundPool;
-    public static int thump, squish1, squish2, squish3, eatFood, getReady, gameOver;
+    public static int thump, squish1, squish2, squish3, eatFood, getReady, gameOver, highScore;
 
 
     public static void playSquishSound() {

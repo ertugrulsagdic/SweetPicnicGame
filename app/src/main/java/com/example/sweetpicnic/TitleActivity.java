@@ -80,7 +80,8 @@ public class TitleActivity extends AppCompatActivity implements View.OnClickList
                 Intent intent = new Intent(this, GameActivity.class);
                 startActivity(intent);
 
-                Assets.mediaPlayer.pause();
+                if (Assets.mediaPlayer != null)
+                    Assets.mediaPlayer.pause();
 
                 break;
             case R.id.high_score_layout:
