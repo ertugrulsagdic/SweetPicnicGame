@@ -6,28 +6,31 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 public class MainThread extends Thread {
     private static final Object lock = new Object();
-    int x, y;
     int tx, ty;
     boolean initialized, touched, isDead;
-    Bitmap bug1, bug2, dead_bug, floor, lives[], foodBar;
+    Bitmap floor, lives[], foodBar;
     Context context;
     int accelerationX, accelerationY, magnitude;
     int currentAngle;
     float bugRadius;
+    Random generator = new Random();
     private SurfaceHolder holder;
     private boolean isRunning = false;
-
+    private List<Bug> bugs = new ArrayList<>();
 
     public MainThread(SurfaceHolder surfaceHolder, Context context) {
         holder = surfaceHolder;
         this.context = context;
-        x = y = 0;
         initialized = false;
         accelerationX = 0;
         accelerationY = 0;
-        magnitude = 10;
+        magnitude = 5;
         currentAngle = 0;
         touched = false;
         isDead = false;
@@ -48,14 +51,13 @@ public class MainThread extends Thread {
 
     @Override
     public void run() {
-        //while (!isRunning);
         while (isRunning) {
             // Lock the canvas before drawing
             if (holder != null) {
                 Canvas canvas = holder.lockCanvas();
                 if (canvas != null) {
                     // Perform UI processing
-                    update(canvas);
+                    update();
                     // Perform drawing operations on the canvas
                     render(canvas);
                     // After drawing, unlock the canvas and display it
@@ -65,160 +67,141 @@ public class MainThread extends Thread {
         }
     }
 
-    private void update(Canvas canvas) {
-        if (touched) {
-            if (TouchInCircle(x, y)) {
+    private void update() {
+        for (Bug bug : bugs) {
+            if (touched && touchInCircle(bug)) {
                 Assets.playSquishSound();
-                isDead = true;
+                bug.setBugDead(true);
             } else {
                 Assets.soundPool.play(Assets.thump, 1, 1, 1, 0, 1);
             }
-
-            touched = false;
         }
+        touched = false;
     }
 
-    private boolean TouchInCircle(int x, int y) {
-        int centerX = x + bug1.getWidth() / 2;
-        int centerY = y + bug1.getHeight() / 2;
-        // find distance between touch and center of bug
-        double dist = Math.sqrt((tx - centerX) * (tx - centerX) + (ty - centerY) * (ty - centerY));
+    private boolean touchInCircle(Bug bug) {
+        int centerX = bug.getBugX() + bug.getBug1Image().getWidth() / 2;
+        int centerY = bug.getBugY() + bug.getBug1Image().getHeight() / 2;
+        double dis = Math.sqrt((this.tx - centerX) * (this.tx - centerX) + (this.ty - centerY) * (this.ty - centerY));
 
-        if (dist < bugRadius) {
-            return true;
-        } else {
-            return false;
-        }
+        return dis <= this.bugRadius;
     }
-
 
     private void loadGraphics(Canvas canvas) {
-        if (!initialized) {
-            Bitmap bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider1);
-
-            int newWidth = (int) (canvas.getWidth() * 0.2f);
-
-            float scaleFact = (float) newWidth / bmp.getWidth();
-
-            int newHeight = (int) (bmp.getHeight() * scaleFact);
-
-            bugRadius = newWidth / 2;
-
-            System.out.println("newWidth: " + newWidth + " newHeight: " + newHeight);
-
-            bug1 = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
-
-            bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider2);
-
-            bug2 = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
-
-            bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider_dead);
-
-            dead_bug = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
-
-            bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.background);
-
-            floor = Bitmap.createScaledBitmap(bmp, canvas.getWidth(), canvas.getHeight(), false);
-
-
-            bmp = BitmapFactory.decodeResource (context.getResources(), R.drawable.life);
-
-            float hearthScaleRatio = 0.1f;
-            lives[0] = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
-            lives[1] = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
-            lives[2] = Bitmap.createScaledBitmap(bmp, (int)(canvas.getWidth()*hearthScaleRatio), (int)(canvas.getWidth()*hearthScaleRatio), false);
-
-            bmp = BitmapFactory.decodeResource (context.getResources(), R.drawable.food_bar);
-            newWidth = (int) (canvas.getWidth() * 0.2f);
-            scaleFact = (float) newWidth / bmp.getWidth();
-            newHeight = (int) (bmp.getHeight() * scaleFact);
-            foodBar = Bitmap.createScaledBitmap(bmp, bmp.getWidth(), bmp.getHeight(), false);
-
-
-            bmp = null;
-
-            initialized = true;
+        if (initialized) {
+            return;
         }
-    }
 
+        Bitmap bmp;
+        bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider1);
+
+        int newWidth = (int) (canvas.getWidth() * 0.2f);
+        float scaleFactor = (float) newWidth / bmp.getWidth();
+        int newHeight = (int) (bmp.getHeight() * scaleFactor);
+
+        Bitmap bug1Image = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
+        bmp = null;
+
+        this.bugRadius = newWidth * 0.66f;
+
+        bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider2);
+        Bitmap bug2Image = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
+        bmp = null;
+
+        bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider_dead);
+        Bitmap deadBugImage = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
+        bmp = null;
+
+        for (int i = 0; i < 5; i++) {
+            int bugY = i * 30;
+            Bug bug = new Bug(canvas.getWidth(), bugY, this.bugRadius, bug1Image, bug2Image, deadBugImage);
+            bugs.add(bug);
+        }
+
+        bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.background);
+        floor = Bitmap.createScaledBitmap(bmp, canvas.getWidth(), canvas.getHeight(), false);
+        bmp = null;
+
+        float hearthScaleRatio = 0.1f;
+        bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.life);
+        lives[0] = Bitmap.createScaledBitmap(bmp, (int) (canvas.getWidth() * hearthScaleRatio), (int) (canvas.getWidth() * hearthScaleRatio), false);
+        lives[1] = Bitmap.createScaledBitmap(bmp, (int) (canvas.getWidth() * hearthScaleRatio), (int) (canvas.getWidth() * hearthScaleRatio), false);
+        lives[2] = Bitmap.createScaledBitmap(bmp, (int) (canvas.getWidth() * hearthScaleRatio), (int) (canvas.getWidth() * hearthScaleRatio), false);
+
+        bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.food_bar);
+        foodBar = Bitmap.createScaledBitmap(bmp, bmp.getWidth(), bmp.getHeight(), false);
+        bmp = null;
+
+        initialized = true;
+    }
 
     private void render(Canvas canvas) {
-        int xx, yy;
         loadGraphics(canvas);
 
-        canvas.drawBitmap(floor, 0, 0, null);
-        canvas.drawBitmap(foodBar, 0, (int)(canvas.getHeight()-foodBar.getHeight()), null);
+        canvas.drawBitmap(this.floor, 0, 0, null);
+        canvas.drawBitmap(foodBar, 0, (int) (canvas.getHeight() - foodBar.getHeight()), null);
         canvas.drawBitmap(lives[0], 0, 0, null);
         canvas.drawBitmap(lives[1], lives[0].getWidth(), 0, null);
-        canvas.drawBitmap(lives[2], lives[0].getWidth()*2, 0, null);
+        canvas.drawBitmap(lives[2], lives[0].getWidth() * 2, 0, null);
 
-
-        long time = System.currentTimeMillis() / 100 % 10;
-
-        if (!isDead) {
-            // Draw a white circle at position (100, 100) with a radius of 100
-            synchronized (lock) {
-
-                if (x >= canvas.getWidth() - bug1.getWidth()) {
-                    accelerationX = -magnitude;
-                } else if (x <= 0) {
-                    accelerationX = magnitude;
+        synchronized (lock) {
+            for (Bug bug : bugs) {
+                if (bug.isBugDead()) {
+                    canvas.drawBitmap(bug.getDeadBugImage(), bug.getBugX(), bug.getBugY(), null);
+                    bugs.remove(bug);
                 } else {
-                    if (time % 10 == 0) {
-                        double rand = Math.random();
-                        if (rand < 0.4)
-                            accelerationX = magnitude;
-                        else if (rand > 0.4 && rand < 0.8)
-                            accelerationX = -magnitude;
-                        else
-                            accelerationX = 0;
+                    long curTime = System.currentTimeMillis() / 100 % 10;
+
+                    setBugXY(canvas, bug, curTime);
+//                    rotateAccordingToAcceleration(canvas, bug);
+
+                    if (curTime % 2 == 0) {
+                        canvas.drawBitmap(bug.getBug1Image(), bug.getBugX(), bug.getBugY(), null);
+
+                    } else {
+                        canvas.drawBitmap(bug.getBug2Image(), bug.getBugX(), bug.getBugY(), null);
                     }
+
                 }
 
-                if (y >= canvas.getHeight() - bug1.getHeight()) {
-                    accelerationY = -magnitude;
-                } else if (y <= 0) {
-                    accelerationY = magnitude;
-                } else {
-                    if (time % 10 == 0) {
-                        double rand = Math.random();
-                        if (rand < 0.4)
-                            accelerationY = magnitude;
-                        else if (rand > 0.4 && rand < 0.8)
-                            accelerationY = -magnitude;
-                        else
-                            accelerationY = 0;
-                    }
-                }
-
-                if (accelerationX == 0 && accelerationY == 0) {
-                    accelerationX = magnitude;
-                    accelerationY = magnitude;
-                }
-                x += accelerationX;
-                y += accelerationY;
-
-                xx = x;
-                yy = y;
             }
-
-            rotateAccordingToAcceleration(canvas, xx, yy);
-
-            if (time % 2 == 0) {
-                canvas.drawBitmap(bug1, xx, yy, null);
-            } else {
-                canvas.drawBitmap(bug2, xx, yy, null);
-            }
-
-        } else {
-            rotateAccordingToAcceleration(canvas, x, y);
-            canvas.drawBitmap(dead_bug, x, y, null);
         }
+
     }
 
-    private void rotateAccordingToAcceleration(Canvas canvas, int xx, int yy) {
-        int x = xx + bug1.getWidth() / 2;
-        int y = yy + bug1.getHeight() / 2;
+    private void setBugXY(Canvas canvas, Bug bug, long curTime) {
+        int bugX = bug.getBugX();
+        int bugY = bug.getBugY();
+        if (bugX >= canvas.getWidth() - bug.getBug1Image().getWidth()) {
+            accelerationX = -magnitude;
+        } else if (bugX <= 0) {
+            accelerationX = magnitude;
+        } else {
+            if (curTime % 10 == 0) {
+                double rand = generator.nextDouble();
+                if (rand < 0.4) {
+                    accelerationX = magnitude;
+                } else if (rand > 0.4 && rand < 0.8) {
+
+                    accelerationX = -magnitude;
+                } else {
+                    accelerationX = 0;
+                }
+            }
+        }
+
+        bugX += accelerationX;
+        bugY += magnitude;
+
+        bug.setBugX(bugX);
+        bug.setBugY(bugY);
+
+    }
+
+
+    private void rotateAccordingToAcceleration(Canvas canvas, Bug bug) {
+        int x = bug.getBugX() + bug.getBug1Image().getWidth() / 2;
+        int y = bug.getBugY() + bug.getBug1Image().getHeight() / 2;
         int angle = 0;
 
         if (accelerationY < 0 && accelerationX == 0) {
