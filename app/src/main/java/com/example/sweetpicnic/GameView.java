@@ -21,6 +21,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private MainThread t = null;
 
 
+
     public GameView(Context context, Handler handler, SharedPreferences preferences) {
         super(context);
         this.context = context;
@@ -68,6 +69,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     }
 
+    public void resetGame() {
+        System.out.println("Reset Game");
+
+        t.setRunning(false);
+        t.interrupt();
+        t = null;
+
+        // Now create a new MainThread
+        t = new MainThread(holder, context, handler, preferences, this);
+        t.setRunning(true);
+        t.start();
+
+    }
+
     public void pause() {
         t.setRunning(false);
         while (true) {
@@ -78,7 +93,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
             break;
         }
-        t = null;
     }
 
     public void resume() {
@@ -93,8 +107,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         y = event.getY();
 
         if (action == MotionEvent.ACTION_DOWN) {
-            if (t != null)
+            if (t != null) {
                 t.setXY((int) x, (int) y);
+            }
+
+
+
         }
         return true; // to indicate we have handled this event
     }
@@ -103,7 +121,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(SurfaceHolder holder) {
         // Create and start a drawing thread whose Runnable object is defined by this class (MainView)
         if (t == null) {
-            t = new MainThread(holder, context, handler, preferences);
+            t = new MainThread(holder, context, handler, preferences, this);
             t.setRunning(true);
             t.start();
             setFocusable(true); // make sure we get events

@@ -60,5 +60,9 @@ public class PreferencesFragmentSettings extends PreferenceFragment implements S
                 }
             }
         }
+        if (key.equals("key_sounds_enabled")) {
+            boolean soundEnabled = sharedPreferences.getBoolean(key, true);
+            Assets.isSoundsEnabled = soundEnabled;
+        }
     }
 }

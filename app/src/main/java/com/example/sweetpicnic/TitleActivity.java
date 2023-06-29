@@ -42,6 +42,8 @@ public class TitleActivity extends AppCompatActivity implements View.OnClickList
         int highScore = preferences.getInt("high_score", 0);
         highScoreText.setText(String.valueOf(highScore));
 
+        Assets.isSoundsEnabled = preferences.getBoolean("key_sounds_enabled", true);
+
         playMusic();
     }
 

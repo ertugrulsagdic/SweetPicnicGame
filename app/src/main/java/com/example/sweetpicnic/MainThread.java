@@ -43,11 +43,16 @@ public class MainThread extends Thread {
 
     SharedPreferences preferences;
 
-    public MainThread(SurfaceHolder surfaceHolder, Context context, Handler handler, SharedPreferences preferences) {
+    int buttonWidth, buttonHeight, buttonX, buttonY;
+
+    GameView gameView;
+
+    public MainThread(SurfaceHolder surfaceHolder, Context context, Handler handler, SharedPreferences preferences, GameView gameView) {
         holder = surfaceHolder;
         this.context = context;
         this.handler = handler;
         this.preferences = preferences;
+        this.gameView = gameView;
         initialized = false;
         currentAngle = 0;
         touched = false;
@@ -91,7 +96,7 @@ public class MainThread extends Thread {
                 if (canvas != null) {
                     if (!initialized) {
                         loadGraphics(canvas);
-                        Assets.soundPool.play(Assets.getReady, 1, 1, 1, 0, 1);
+                        Assets.playGetReadySound();
                         playGetReadyAndStart();
                         initialized = true;
                     }
@@ -111,16 +116,15 @@ public class MainThread extends Thread {
                     }
 
                     if (livesLeft == 0 && !gameOver) {
-                        setLives(canvas);
+                        renderLives(canvas);
                         Assets.mediaPlayer.pause();
-                        Assets.soundPool.play(Assets.gameOver, 1, 1, 1, 0, 1);
+                        Assets.playGameOverSound();
                         gameOver = true;
                     }
 
                     if (gameOver) {
                         renderGameOver(canvas);
                     }
-
                     // After drawing, unlock the canvas and display it
                     holder.unlockCanvasAndPost(canvas);
 
@@ -133,7 +137,7 @@ public class MainThread extends Thread {
     private void checkHighScore() {
         if (score > highScore) {
             if (highScore > 0  && !hasHighScorePassed) {
-                Assets.soundPool.play(Assets.highScore, 1, 1, 1, 0, 1);
+                Assets.playHighScoreSound();
 
                 handler.post(new Runnable() {
                     @Override
@@ -170,14 +174,30 @@ public class MainThread extends Thread {
 
                     isTouchToBug = true;
                     aliveBugNum--;
+
+                    // revome bug from list
+                    handler.postDelayed(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    bugs.remove(bug);
+                                }
+                            }, 2000);
                 }
             }
 
             if (!isTouchToBug) {
-                Assets.soundPool.play(Assets.thump, 1, 1, 1, 0, 1);
+                Assets.playThumpSound();
             }
         }
 
+        if (touched && gameOver) {
+            // check if the touch is on the try again button
+            if (touchX >= buttonX && touchX <= buttonX + buttonWidth && touchY >= buttonY && touchY <= buttonY + buttonHeight) {
+                // reset the game
+                gameView.resetGame();
+            }
+        }
         touched = false;
     }
 
@@ -246,26 +266,30 @@ public class MainThread extends Thread {
 
         Typeface customTypeface = ResourcesCompat.getFont(context, R.font.press_start_2p);
 
-        setLives(canvas);
+        renderLives(canvas);
         // render score with the font
         Paint paint = new Paint();
         paint.setColor(Color.WHITE);
-        paint.setTextSize(50);
+        paint.setTextSize(100);
         paint.setTypeface(customTypeface);
-        canvas.drawText("Score: " + score, 10, 80, paint);
+        canvas.drawText(String.valueOf(score), 25, 120, paint);
     }
 
-    private void setLives(Canvas canvas) {
+    private void renderLives(Canvas canvas) {
         for (int i = 0; i < livesLeft; i++) {
             // put x to left top corner
-            int left = canvas.getWidth() - (i + 1) * life.getWidth() - (i + 1) * 10;
-            canvas.drawBitmap(life, left, 0, null);
+            int left = canvas.getWidth() - (i + 1) * life.getWidth() - (i + 1) * 15;
+            canvas.drawBitmap(life, left, 10, null);
         }
     }
 
     private void renderBugs(Canvas canvas) {
         synchronized (lock) {
-            for (Bug bug : bugs) {
+            for (int i = 0; i < bugs.size(); i++) {
+                Bug bug = bugs.get(i);
+                if (bug == null) {
+                    continue;
+                }
                 if (bug.isBugDead()) {
                     canvas.drawBitmap(bug.getDeadBugImage(), bug.getBugX(), bug.getBugY(), null);
                 } else {
@@ -287,9 +311,20 @@ public class MainThread extends Thread {
                     if (livesLeft > 0 && !bug.getHasPassedFoodBar()) {
                         livesLeft--;
 
-                        Assets.soundPool.play(Assets.eatFood, 1, 1, 1, 0, 1);
+                        Assets.playEatFoodSound();
 
                         bug.setHasPassedFoodBar(true);
+
+                        aliveBugNum--;
+
+
+                        handler.postDelayed(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        bugs.remove(bug);
+                                    }
+                                }, 0);
                     }
                 }
             }
@@ -298,7 +333,6 @@ public class MainThread extends Thread {
 
     private void renderCountdown(Canvas canvas) {
         // count from 3
-        int countDown = 3;
         long curTime = System.currentTimeMillis() / 1000;
 
         long time = curTime - startTime;
@@ -322,6 +356,18 @@ public class MainThread extends Thread {
         paint.setTypeface(ResourcesCompat.getFont(context, R.font.press_start_2p));
         int textWidth = (int) paint.measureText("Game Over!");
         canvas.drawText("Game Over!", canvas.getWidth() / 2 - textWidth / 2, canvas.getHeight() / 2, paint);
+
+        // try again button
+        buttonWidth = width / 2;
+        buttonHeight = width / 8;
+        buttonX = width / 2 - buttonWidth / 2;
+        buttonY = canvas.getHeight() / 2 + buttonHeight * 2;
+        paint.setColor(Color.rgb(242, 78, 30));
+        canvas.drawRect(buttonX, buttonY, buttonX + buttonWidth, buttonY + buttonHeight, paint);
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(buttonHeight / 3);
+        textWidth = (int) paint.measureText("Try Again");
+        canvas.drawText("Try Again", buttonX + buttonWidth / 2 - textWidth / 2, buttonY + buttonHeight / 2, paint);
     }
 
     private void setBugXY(Canvas canvas, Bug bug, long curTime) {
