@@ -5,9 +5,13 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.content.res.ResourcesCompat;
 import android.view.SurfaceHolder;
 
 import java.util.ArrayList;
@@ -18,7 +22,7 @@ public class MainThread extends Thread {
     private static final Object lock = new Object();
     int x, y;
     int tx, ty;
-    boolean initialized, touched, isDead;
+    boolean initialized, touched, gameOver;
     Bitmap floor, life, foodBar;
     Context context;
 
@@ -31,7 +35,7 @@ public class MainThread extends Thread {
     private boolean isRunning = false;
     private List<Bug> bugs = new ArrayList<>();
 
-
+    int score;
     boolean startPlaying;
 
     public MainThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
@@ -42,9 +46,9 @@ public class MainThread extends Thread {
         initialized = false;
         currentAngle = 0;
         touched = false;
-        isDead = false;
         livesLeft = 3;
         startPlaying = false;
+        score = 0;
     }
 
     public void setRunning(boolean b) {
@@ -70,13 +74,17 @@ public class MainThread extends Thread {
     }
     @Override
     public void run() {
-        Assets.soundPool.play(Assets.getReady, 1, 1, 1, 0, 1);
-        playGetReadyAndStart();
         while (isRunning) {
             // Lock the canvas before drawing
             if (holder != null) {
                 Canvas canvas = holder.lockCanvas();
                 if (canvas != null) {
+                    if (!initialized) {
+                        loadGraphics(canvas);
+                        Assets.soundPool.play(Assets.getReady, 1, 1, 1, 0, 1);
+                        playGetReadyAndStart();
+                        initialized = true;
+                    }
                     // Perform UI processing
                     update();
                     // Perform drawing operations on the canvas
@@ -84,23 +92,45 @@ public class MainThread extends Thread {
 
                     if (startPlaying) {
                         renderBugs(canvas);
+                    } else {
+
+                        long endTime = System.currentTimeMillis() / 1000 + 4;
+                        renderCountdown(canvas, endTime);
                     }
+
+
                     // After drawing, unlock the canvas and display it
                     holder.unlockCanvasAndPost(canvas);
+
+                    if (livesLeft == 0 && !gameOver) {
+                        Assets.mediaPlayer.pause();
+                        Assets.soundPool.play(Assets.gameOver, 1, 1, 1,0, 1);
+                        setLives(canvas);
+                        gameOver = true;
+                    }
                 }
             }
+
         }
     }
 
     private void update() {
-        for (Bug bug : bugs) {
-            if (touched && touchInCircle(bug)) {
-                Assets.playSquishSound();
-                bug.setBugDead(true);
-            } else {
+        if (touched) {
+            boolean isTouchToBug = false;
+
+            for (Bug bug : bugs) {
+                if (touchInCircle(bug)) {
+                    Assets.playSquishSound();
+                    bug.setBugDead(true);
+                    isTouchToBug = true;
+                }
+            }
+
+            if (!isTouchToBug) {
                 Assets.soundPool.play(Assets.thump, 1, 1, 1, 0, 1);
             }
         }
+
         touched = false;
     }
 
@@ -136,7 +166,7 @@ public class MainThread extends Thread {
 
         for (int i = 0; i < 5; i++) {
             int bugY = i * 30;
-            int randomMagnitude = generator.nextInt(10);
+            int randomMagnitude = generator.nextInt(5) + 3;
             Bug bug = new Bug(canvas.getWidth(), bugY, this.bugRadius, bug1Image, bug2Image, deadBugImage, randomMagnitude);
             bugs.add(bug);
         }
@@ -154,8 +184,6 @@ public class MainThread extends Thread {
         foodBar = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
         bmp = null;
-
-        initialized = true;
     }
 
     private void renderBackground(Canvas canvas) {
@@ -164,8 +192,22 @@ public class MainThread extends Thread {
         canvas.drawBitmap(floor, 0, 0, null);
         canvas.drawBitmap(foodBar, 0, (int) (canvas.getHeight() - foodBar.getHeight()), null);
 
+        Typeface customTypeface = ResourcesCompat.getFont(context, R.font.press_start_2p);
+
+        setLives(canvas);
+        // render score with the font
+        Paint paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(60);
+        paint.setTypeface(customTypeface);
+        canvas.drawText("Score: " + score, 10, 80, paint);
+    }
+
+    private void setLives(Canvas canvas) {
         for (int i = 0; i < livesLeft; i++) {
-            canvas.drawBitmap(life, i * life.getWidth() + (i + 1) * 10, 0, null);
+            // put x to left top corner
+            int left = canvas.getWidth() - (i + 1) * life.getWidth() - (i + 1) * 10;
+            canvas.drawBitmap(life, left, 0, null);
         }
     }
 
@@ -179,7 +221,9 @@ public class MainThread extends Thread {
                 } else {
                     long curTime = System.currentTimeMillis() / 100 % 10;
 
-                    setBugXY(canvas, bug, curTime);
+                    if (!gameOver) {
+                        setBugXY(canvas, bug, curTime);
+                    }
 //                    rotateAccordingToAcceleration(canvas, bug);
 
                     if (curTime % 2 == 0) {
@@ -190,21 +234,34 @@ public class MainThread extends Thread {
                 }
 
 
-                if (bug.getBugY() == canvas.getHeight() - foodBar.getHeight()) {
-                    if (livesLeft > 0) {
+                if (bug.getBugY() >= canvas.getHeight() - foodBar.getHeight()) {
+                    if (livesLeft > 0 && !bug.getHasPassedFoodBar()) {
                         livesLeft--;
 
                         Assets.soundPool.play(Assets.eatFood, 1, 1, 1, 0, 1);
-                    }
 
-                    if (livesLeft == 0) {
-                        Assets.mediaPlayer.pause();
-                        Assets.soundPool.play(Assets.gameOver, 1, 1, 1,0, 1);
-                        isRunning = false;
+                        bug.setHasPassedFoodBar(true);
                     }
                 }
             }
         }
+    }
+
+    private void renderCountdown(Canvas canvas, long endTime) {
+        // count from 3
+        int countDown = 3;
+        long curTime = System.currentTimeMillis() / 1000;
+
+        if (curTime < endTime) {
+            Paint paint = new Paint();
+            paint.setColor(Color.WHITE);
+            paint.setTextSize(400);
+            paint.setTypeface(ResourcesCompat.getFont(context, R.font.press_start_2p));
+            canvas.drawText(String.valueOf(countDown), canvas.getWidth() / 2 - 100, canvas.getHeight() / 2, paint);
+        }
+
+
+
     }
 
     private void setBugXY(Canvas canvas, Bug bug, long curTime) {
@@ -250,45 +307,5 @@ public class MainThread extends Thread {
         Assets.mediaPlayer.start();
 
     }
-
-//    private void rotateAccordingToAcceleration(Canvas canvas, Bug bug) {
-//        int x = bug.getBugX() + bug.getBug1Image().getWidth() / 2;
-//        int y = bug.getBugY() + bug.getBug1Image().getHeight() / 2;
-//        int angle = 0;
-//
-//        if (accelerationY < 0 && accelerationX == 0) {
-//            angle = 180;
-//        }
-//
-//        if (accelerationY > 0 && accelerationX < 0) {
-//            angle = 45;
-//        }
-//
-//        if (accelerationY > 0 && accelerationX > 0) {
-//            angle = 315;
-//        }
-//        if (accelerationY < 0 && accelerationX < 0) {
-//            angle = 135;
-//        }
-//
-//        if (accelerationY < 0 && accelerationX > 0) {
-//            angle = 225;
-//        }
-//
-//        if (accelerationY > 0 && accelerationX == 0) {
-//            angle = 0;
-//        }
-//
-//        if (accelerationY == 0 && accelerationX < 0) {
-//            angle = 90;
-//        }
-//
-//        if (accelerationY == 0 && accelerationX > 0) {
-//            angle = 270;
-//        }
-//
-//        canvas.rotate(angle, x, y);
-//
-//    }
 
 }

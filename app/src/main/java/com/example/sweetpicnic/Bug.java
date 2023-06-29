@@ -5,6 +5,8 @@ import android.graphics.Bitmap;
 public class Bug {
     private int bugX, bugY;
     private boolean isBugDead;
+
+    private boolean hasPassedFoodBar;
     private Bitmap bug1Image, bug2Image, deadBugImage;
     private float bugRadius;
 
@@ -90,6 +92,15 @@ public class Bug {
 
     public void setAccelerationX(int accelerationX) {
         this.accelerationX = accelerationX;
+    }
+
+
+    public boolean getHasPassedFoodBar() {
+        return hasPassedFoodBar;
+    }
+
+    public void setHasPassedFoodBar(boolean hasPassedFoodBar) {
+        this.hasPassedFoodBar = hasPassedFoodBar;
     }
 
 }
