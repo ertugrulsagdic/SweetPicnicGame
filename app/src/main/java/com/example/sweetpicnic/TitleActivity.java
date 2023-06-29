@@ -2,6 +2,7 @@ package com.example.sweetpicnic;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,21 +22,56 @@ public class TitleActivity extends AppCompatActivity  implements View.OnClickLis
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_title);
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
         startButton = findViewById(R.id.start_button);
         highScoreLayout = findViewById(R.id.high_score_layout);
         highScoreText = findViewById(R.id.high_score_text);
 
         startButton.setOnClickListener(this);
         highScoreLayout.setOnClickListener(this);
+
+        playMusic();
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        int highScore = sharedPreferences.getInt("high_score", 0);
+        // initialize the shared preferences
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        int highScore = preferences.getInt("high_score", 0);
         highScoreText.setText(String.valueOf(highScore));
+
+        playMusic();
+    }
+
+    private void playMusic() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        boolean musicEnabled = preferences.getBoolean("key_music_enabled", true);
+        if (musicEnabled == true) {
+            if (Assets.mediaPlayer != null) {
+                Assets.mediaPlayer.release();
+                Assets.mediaPlayer = null;
+            }
+            Assets.mediaPlayer = MediaPlayer.create (this, R.raw.music_menu);
+            Assets.mediaPlayer.setLooping(true);
+            Assets.mediaPlayer.start();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        if (isFinishing()) {
+            if (Assets.mediaPlayer != null) {
+                Assets.mediaPlayer.pause();
+                Assets.mediaPlayer.release();
+                Assets.mediaPlayer = null;
+            }
+        }
+        super.onPause();
     }
 
     @Override

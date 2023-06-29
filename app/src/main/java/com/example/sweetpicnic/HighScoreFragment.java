@@ -16,11 +16,9 @@ public class HighScoreFragment extends PreferenceFragment implements SharedPrefe
     public HighScoreFragment() {
 
     }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         // Load the preference from an xml resource
         addPreferencesFromResource(R.xml.high_score_fragment);
 

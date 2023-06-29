@@ -50,7 +50,16 @@ public class PreferencesFragmentSettings extends PreferenceFragment implements S
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals("key_music_enabled")) {
-
+            boolean musicEnabled = sharedPreferences.getBoolean(key, true);
+            if (musicEnabled) {
+                if (Assets.mediaPlayer != null) {
+                    Assets.mediaPlayer.start();
+                }
+            }
+            else {
+                if (Assets.mediaPlayer != null)
+                    Assets.mediaPlayer.pause();
+            }
         }
     }
 }

@@ -1,12 +1,13 @@
 package com.example.sweetpicnic;
 
 import android.os.Build;
+import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.view.View;
 
 import java.util.List;
 
 public class HighScoreActivity extends PreferenceActivity {
-
     @Override
     protected boolean isValidFragment(String fragmentName) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
