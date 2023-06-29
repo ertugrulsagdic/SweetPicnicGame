@@ -5,12 +5,9 @@ import android.graphics.Bitmap;
 public class Bug {
     private int bugX, bugY;
     private boolean isBugDead;
-
     private boolean hasPassedFoodBar;
     private Bitmap bug1Image, bug2Image, deadBugImage;
     private float bugRadius;
-
-
     private int magnitude;
     private int accelerationX;
 
