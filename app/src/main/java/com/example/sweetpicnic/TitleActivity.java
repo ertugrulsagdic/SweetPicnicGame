@@ -11,7 +11,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class TitleActivity extends AppCompatActivity  implements View.OnClickListener {
+public class TitleActivity extends AppCompatActivity implements View.OnClickListener {
 
     Button startButton, preferencesButton;
     LinearLayout highScoreLayout;
@@ -21,8 +21,6 @@ public class TitleActivity extends AppCompatActivity  implements View.OnClickLis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_title);
-
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         startButton = findViewById(R.id.start_button);
         preferencesButton = findViewById(R.id.preferences_button);
@@ -56,7 +54,7 @@ public class TitleActivity extends AppCompatActivity  implements View.OnClickLis
                 Assets.mediaPlayer.release();
                 Assets.mediaPlayer = null;
             }
-            Assets.mediaPlayer = MediaPlayer.create (this, R.raw.music_menu);
+            Assets.mediaPlayer = MediaPlayer.create(this, R.raw.music_menu);
             Assets.mediaPlayer.setLooping(true);
             Assets.mediaPlayer.start();
         }

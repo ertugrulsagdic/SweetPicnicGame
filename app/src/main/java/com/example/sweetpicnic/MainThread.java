@@ -20,6 +20,8 @@ import java.util.Random;
 
 public class MainThread extends Thread {
     private static final Object lock = new Object();
+    private final int MAX_BUGS_NUM = 10;
+    private final int MIN_BUGS_NUM = 2;
     int x, y;
     int tx, ty;
     boolean initialized, touched, gameOver;
@@ -31,15 +33,11 @@ public class MainThread extends Thread {
     float bugRadius;
     Random generator = new Random();
     int livesLeft;
+    int score;
+    boolean startPlaying;
     private SurfaceHolder holder;
     private boolean isRunning = false;
     private List<Bug> bugs = new ArrayList<>();
-
-    int score;
-    boolean startPlaying;
-
-    int countDown;
-
     long startTime;
 
     public MainThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
@@ -53,7 +51,6 @@ public class MainThread extends Thread {
         livesLeft = 3;
         startPlaying = false;
         score = 0;
-        countDown = 3;
         startTime = System.currentTimeMillis() / 1000;
     }
 
@@ -78,6 +75,7 @@ public class MainThread extends Thread {
             }
         }, 4000);
     }
+
     @Override
     public void run() {
         while (isRunning) {
@@ -127,9 +125,14 @@ public class MainThread extends Thread {
             boolean isTouchToBug = false;
 
             for (Bug bug : bugs) {
+                if (bug.isBugDead()) {
+                    continue;
+                }
+
                 if (touchInCircle(bug)) {
                     Assets.playSquishSound();
                     bug.setBugDead(true);
+                    score++;
                     isTouchToBug = true;
                 }
             }
@@ -172,10 +175,10 @@ public class MainThread extends Thread {
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider_dead);
         Bitmap deadBugImage = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
-        for (int i = 0; i < 5; i++) {
-            int bugY = i * 30;
-            int randomMagnitude = generator.nextInt(5) + 3;
-            Bug bug = new Bug(canvas.getWidth(), bugY, this.bugRadius, bug1Image, bug2Image, deadBugImage, randomMagnitude);
+        int numberOfBugs = generator.nextInt(MAX_BUGS_NUM - MIN_BUGS_NUM + 1) + MIN_BUGS_NUM;
+        for (int i = 0; i < numberOfBugs; i++) {
+            int randomMagnitude = generator.nextInt(5) + 2;
+            Bug bug = new Bug(canvas.getWidth(), 0, this.bugRadius, bug1Image, bug2Image, deadBugImage, randomMagnitude);
             bugs.add(bug);
         }
 
@@ -206,7 +209,7 @@ public class MainThread extends Thread {
         // render score with the font
         Paint paint = new Paint();
         paint.setColor(Color.WHITE);
-        paint.setTextSize(60);
+        paint.setTextSize(50);
         paint.setTypeface(customTypeface);
         canvas.drawText("Score: " + score, 10, 80, paint);
     }
@@ -220,12 +223,10 @@ public class MainThread extends Thread {
     }
 
     private void renderBugs(Canvas canvas) {
-        // Draw a white circle at position (100, 100) with a radius of 100
         synchronized (lock) {
             for (Bug bug : bugs) {
                 if (bug.isBugDead()) {
                     canvas.drawBitmap(bug.getDeadBugImage(), bug.getBugX(), bug.getBugY(), null);
-//                    bugs.remove(bug);
                 } else {
                     long curTime = System.currentTimeMillis() / 100 % 10;
 
@@ -256,6 +257,7 @@ public class MainThread extends Thread {
 
     private void renderCountdown(Canvas canvas) {
         // count from 3
+        int countDown = 3;
         long curTime = System.currentTimeMillis() / 1000;
 
         long time = curTime - startTime;

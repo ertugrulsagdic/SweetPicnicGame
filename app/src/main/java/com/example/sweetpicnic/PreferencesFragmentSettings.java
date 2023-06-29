@@ -11,7 +11,7 @@ import android.util.Log;
 public class PreferencesFragmentSettings extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public PreferencesFragmentSettings() {
-
+        // Placeholder
     }
 
     @Override
@@ -38,8 +38,7 @@ public class PreferencesFragmentSettings extends PreferenceFragment implements S
                     Uri site = Uri.parse("https://www.linkedin.com/in/ertugrulsagdic/");
                     Intent intent = new Intent(Intent.ACTION_VIEW, site);
                     startActivity(intent);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     Log.e("PreferencesFragment", "Browser failed" + e);
                 }
                 return true;
@@ -55,10 +54,10 @@ public class PreferencesFragmentSettings extends PreferenceFragment implements S
                 if (Assets.mediaPlayer != null) {
                     Assets.mediaPlayer.start();
                 }
-            }
-            else {
-                if (Assets.mediaPlayer != null)
+            } else {
+                if (Assets.mediaPlayer != null) {
                     Assets.mediaPlayer.pause();
+                }
             }
         }
     }

@@ -1,21 +1,19 @@
 package com.example.sweetpicnic;
 
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 
 public class HighScoreFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public HighScoreFragment() {
-
+        // Placeholder
     }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +68,6 @@ public class HighScoreFragment extends PreferenceFragment implements SharedPrefe
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-
+        // Placeholder
     }
 }

@@ -11,15 +11,13 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
-    private SurfaceHolder holder = null;
     int x, y;
-    private MainThread t = null;
     Context context;
     int numberOfSoundsLoaded = 0;
-
     Handler handler;
+    private SurfaceHolder holder = null;
+    private MainThread t = null;
 
-    // Constructor
     public GameView(Context context, Handler handler) {
         super(context);
         this.context = context;
@@ -58,15 +56,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         Assets.squish1 = Assets.soundPool.load(context, R.raw.squish1, 1);
         Assets.squish2 = Assets.soundPool.load(context, R.raw.squish3, 1);
         Assets.squish3 = Assets.soundPool.load(context, R.raw.squish3, 1);
-        Assets.eatFood =  Assets.soundPool.load(context, R.raw.eat_food, 1);
+        Assets.eatFood = Assets.soundPool.load(context, R.raw.eat_food, 1);
         Assets.getReady = Assets.soundPool.load(context, R.raw.get_ready, 1);
         Assets.gameOver = Assets.soundPool.load(context, R.raw.game_over, 1);
 
 
     }
 
-    public void pause ()
-    {
+    public void pause() {
         t.setRunning(false);
         while (true) {
             try {
@@ -79,13 +76,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         t = null;
     }
 
-    public void resume ()
-    {
+    public void resume() {
+        // Placeholder
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event)
-    {
+    public boolean onTouchEvent(MotionEvent event) {
         float x, y;
         int action = event.getAction();
         x = event.getX();
@@ -93,13 +89,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         if (action == MotionEvent.ACTION_DOWN) {
             if (t != null)
-                t.setXY ((int)x, (int)y);
+                t.setXY((int) x, (int) y);
         }
         return true; // to indicate we have handled this event
     }
 
     @Override
-    public void surfaceCreated (SurfaceHolder holder) {
+    public void surfaceCreated(SurfaceHolder holder) {
         // Create and start a drawing thread whose Runnable object is defined by this class (MainView)
         if (t == null) {
             t = new MainThread(holder, context, handler);
@@ -108,7 +104,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             setFocusable(true); // make sure we get events
         }
     }
+
     // Neither of these two methods are used in this example, however, their definitions are required because SurfaceHolder.Callback was implemented
-    @Override public void surfaceChanged(SurfaceHolder sh, int f, int w, int h) {}
-    @Override public void surfaceDestroyed(SurfaceHolder sh) {}
+    @Override
+    public void surfaceChanged(SurfaceHolder sh, int f, int w, int h) {
+        // Placeholder
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder sh) {
+        // Placeholder
+    }
 }
