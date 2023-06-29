@@ -12,14 +12,16 @@ import java.util.Random;
 
 public class MainThread extends Thread {
     private static final Object lock = new Object();
+    int x, y;
     int tx, ty;
     boolean initialized, touched, isDead;
-    Bitmap floor, lives[], foodBar;
+    Bitmap floor, life, foodBar;
     Context context;
     int accelerationX, accelerationY, magnitude;
     int currentAngle;
     float bugRadius;
     Random generator = new Random();
+    int livesLeft;
     private SurfaceHolder holder;
     private boolean isRunning = false;
     private List<Bug> bugs = new ArrayList<>();
@@ -27,6 +29,7 @@ public class MainThread extends Thread {
     public MainThread(SurfaceHolder surfaceHolder, Context context) {
         holder = surfaceHolder;
         this.context = context;
+        x = y = 0;
         initialized = false;
         accelerationX = 0;
         accelerationY = 0;
@@ -34,7 +37,7 @@ public class MainThread extends Thread {
         currentAngle = 0;
         touched = false;
         isDead = false;
-        lives = new Bitmap[3];
+        livesLeft = 3;
     }
 
     public void setRunning(boolean b) {
@@ -87,6 +90,7 @@ public class MainThread extends Thread {
         return dis <= this.bugRadius;
     }
 
+
     private void loadGraphics(Canvas canvas) {
         if (initialized) {
             return;
@@ -100,17 +104,13 @@ public class MainThread extends Thread {
         int newHeight = (int) (bmp.getHeight() * scaleFactor);
 
         Bitmap bug1Image = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
-        bmp = null;
-
         this.bugRadius = newWidth * 0.66f;
 
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider2);
         Bitmap bug2Image = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
-        bmp = null;
 
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.spider_dead);
         Bitmap deadBugImage = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
-        bmp = null;
 
         for (int i = 0; i < 5; i++) {
             int bugY = i * 30;
@@ -120,16 +120,16 @@ public class MainThread extends Thread {
 
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.background);
         floor = Bitmap.createScaledBitmap(bmp, canvas.getWidth(), canvas.getHeight(), false);
-        bmp = null;
 
         float hearthScaleRatio = 0.1f;
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.life);
-        lives[0] = Bitmap.createScaledBitmap(bmp, (int) (canvas.getWidth() * hearthScaleRatio), (int) (canvas.getWidth() * hearthScaleRatio), false);
-        lives[1] = Bitmap.createScaledBitmap(bmp, (int) (canvas.getWidth() * hearthScaleRatio), (int) (canvas.getWidth() * hearthScaleRatio), false);
-        lives[2] = Bitmap.createScaledBitmap(bmp, (int) (canvas.getWidth() * hearthScaleRatio), (int) (canvas.getWidth() * hearthScaleRatio), false);
+        life = Bitmap.createScaledBitmap(bmp, (int) (canvas.getWidth() * hearthScaleRatio), (int) (canvas.getWidth() * hearthScaleRatio), false);
 
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.food_bar);
-        foodBar = Bitmap.createScaledBitmap(bmp, bmp.getWidth(), bmp.getHeight(), false);
+        newWidth = canvas.getWidth();
+        newHeight = (int) (canvas.getHeight() * 0.1f);
+        foodBar = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
+
         bmp = null;
 
         initialized = true;
@@ -138,12 +138,14 @@ public class MainThread extends Thread {
     private void render(Canvas canvas) {
         loadGraphics(canvas);
 
-        canvas.drawBitmap(this.floor, 0, 0, null);
+        canvas.drawBitmap(floor, 0, 0, null);
         canvas.drawBitmap(foodBar, 0, (int) (canvas.getHeight() - foodBar.getHeight()), null);
-        canvas.drawBitmap(lives[0], 0, 0, null);
-        canvas.drawBitmap(lives[1], lives[0].getWidth(), 0, null);
-        canvas.drawBitmap(lives[2], lives[0].getWidth() * 2, 0, null);
 
+        for (int i = 0; i < livesLeft; i++) {
+            canvas.drawBitmap(life, i * life.getWidth() + (i + 1) * 10, 0, null);
+        }
+
+        // Draw a white circle at position (100, 100) with a radius of 100
         synchronized (lock) {
             for (Bug bug : bugs) {
                 if (bug.isBugDead()) {
@@ -157,21 +159,18 @@ public class MainThread extends Thread {
 
                     if (curTime % 2 == 0) {
                         canvas.drawBitmap(bug.getBug1Image(), bug.getBugX(), bug.getBugY(), null);
-
                     } else {
                         canvas.drawBitmap(bug.getBug2Image(), bug.getBugX(), bug.getBugY(), null);
                     }
-
                 }
-
             }
         }
-
     }
 
     private void setBugXY(Canvas canvas, Bug bug, long curTime) {
         int bugX = bug.getBugX();
         int bugY = bug.getBugY();
+
         if (bugX >= canvas.getWidth() - bug.getBug1Image().getWidth()) {
             accelerationX = -magnitude;
         } else if (bugX <= 0) {
@@ -195,7 +194,6 @@ public class MainThread extends Thread {
 
         bug.setBugX(bugX);
         bug.setBugY(bugY);
-
     }
 
 
