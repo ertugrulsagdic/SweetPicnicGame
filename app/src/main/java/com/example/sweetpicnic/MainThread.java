@@ -319,7 +319,7 @@ public class MainThread extends Thread {
 
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.pause_button);
         int pauseButtonWidth = (int) (canvas.getWidth() * 0.1f);
-        int pauseButtonHeight = (int) (canvas.getHeight() * 0.1f);
+        int pauseButtonHeight = (int) (canvas.getWidth() * 0.1f);
         pauseButton = Bitmap.createScaledBitmap(bmp, pauseButtonWidth, pauseButtonHeight, false);
         pauseButtonX = (canvas.getWidth() / 2) - (pauseButtonWidth / 2);
         pauseButtonY = 0;
