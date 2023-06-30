@@ -30,7 +30,7 @@ public class MainThread extends Thread {
     private final int MIN_BUGS_NUM = 2;
     int touchX, touchY;
     boolean initialized, touched, gameOver;
-    Bitmap bug1Image, bug2Image, deadBugImage, floor, life, foodBar, pauseButton;
+    Bitmap bug1Image, bug2Image, deadBugImage, floor, life, foodBar, pauseButton, playButton;
     Context context;
 
     Handler handler;
@@ -324,12 +324,22 @@ public class MainThread extends Thread {
         pauseButtonX = (canvas.getWidth() / 2) - (pauseButtonWidth / 2);
         pauseButtonY = 0;
 
+        // Load the "play" button image
+        bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.play_button);
+        playButton = Bitmap.createScaledBitmap(bmp, pauseButtonWidth, pauseButtonHeight, false);
+
+
 
         bmp = null;
     }
 
     private void renderPauseButton(Canvas canvas) {
-        canvas.drawBitmap(pauseButton, pauseButtonX, pauseButtonY, null);
+
+        if(isPaused){
+            canvas.drawBitmap(playButton, pauseButtonX, pauseButtonY, null);
+        } else {
+            canvas.drawBitmap(pauseButton, pauseButtonX, pauseButtonY, null);
+        }
     }
 
     private void addBugs(Canvas canvas) {
