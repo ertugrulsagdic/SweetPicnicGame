@@ -1,3 +1,7 @@
+// Ertugrul Sagdic
+// Goksel Tokur
+// Arda Bayram
+
 package com.example.sweetpicnic;
 
 import android.content.Intent;
