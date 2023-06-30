@@ -12,6 +12,7 @@ import android.media.MediaPlayer;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.content.res.ResourcesCompat;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.widget.Toast;
 
@@ -25,7 +26,7 @@ public class MainThread extends Thread {
     private final int MIN_BUGS_NUM = 2;
     int touchX, touchY;
     boolean initialized, touched, gameOver;
-    Bitmap bug1Image, bug2Image, deadBugImage, floor, life, foodBar;
+    Bitmap bug1Image, bug2Image, deadBugImage, floor, life, foodBar, pauseButton;
     Context context;
 
     Handler handler;
@@ -46,6 +47,13 @@ public class MainThread extends Thread {
     int buttonWidth, buttonHeight, buttonX, buttonY;
 
     GameView gameView;
+
+    int pauseButtonX, pauseButtonY;
+
+    boolean isPaused = false;
+    int pauseCheck = 0;
+
+    private final Object pauseLock = new Object();
 
     public MainThread(SurfaceHolder surfaceHolder, Context context, Handler handler, SharedPreferences preferences, GameView gameView) {
         holder = surfaceHolder;
@@ -71,6 +79,17 @@ public class MainThread extends Thread {
 
     public void setXY(int x, int y) {
         synchronized (lock) {
+
+
+
+            Log.i("TOUCH SETXY", isPaused + " " + isRunning);
+            if (isPaused && touchInPauseButton()){
+                //isRunning = true;
+                setPaused(false);
+                pauseCheck = 1;
+            }
+
+
             this.touchX = x;
             this.touchY = y;
             touched = true;
@@ -90,6 +109,23 @@ public class MainThread extends Thread {
     @Override
     public void run() {
         while (isRunning) {
+
+            synchronized (pauseLock) {
+                if (!isRunning) { // stops the thread
+                    break;
+                }
+                if (isPaused) {
+                    try {
+                        pauseLock.wait(); // will cause this Thread to block until another thread calls pauseLock.notifyAll()
+                    } catch (InterruptedException ex) {
+                        break;
+                    }
+                    if (!isRunning) { // stops the thread
+                        break;
+                    }
+                }
+            }
+
             // Lock the canvas before drawing
             if (holder != null) {
                 Canvas canvas = holder.lockCanvas();
@@ -132,6 +168,8 @@ public class MainThread extends Thread {
             }
 
         }
+
+
     }
 
     private void checkHighScore() {
@@ -157,7 +195,7 @@ public class MainThread extends Thread {
     }
 
     private void update() {
-        if (touched && !gameOver) {
+        if (touched && !gameOver && !isPaused) {
             boolean isTouchToBug = false;
 
             for (Bug bug : bugs) {
@@ -191,6 +229,15 @@ public class MainThread extends Thread {
             }
         }
 
+        if (touched && !gameOver && !isPaused && touchInPauseButton() && pauseCheck == 0){
+
+            //isRunning = false;
+            setPaused(true);
+            Log.i("TOUCH 2", isPaused+" "+isRunning);
+
+        }
+        pauseCheck = 0;
+
         if (touched && gameOver) {
             // check if the touch is on the try again button
             if (touchX >= buttonX && touchX <= buttonX + buttonWidth && touchY >= buttonY && touchY <= buttonY + buttonHeight) {
@@ -199,6 +246,26 @@ public class MainThread extends Thread {
             }
         }
         touched = false;
+    }
+
+    public void setPaused(boolean paused) {
+        if (this.isPaused && !paused) { // if the game is moving from a paused state to a resumed state
+            synchronized (pauseLock) {
+                this.isPaused = false;
+                pauseLock.notifyAll(); // Unblocks thread
+            }
+        } else {
+            this.isPaused = paused;
+        }
+    }
+
+    private boolean touchInPauseButton() {
+        int centerX = pauseButtonX + pauseButton.getWidth() / 2;
+        int centerY = pauseButtonY + pauseButton.getHeight() / 2;
+        double dis = Math.sqrt((this.touchX - centerX) * (this.touchX - centerX) + (this.touchY - centerY) * (this.touchY - centerY));
+
+
+        return dis <= this.pauseButton.getWidth() / 2;
     }
 
     private boolean touchInCircle(Bug bug) {
@@ -245,7 +312,20 @@ public class MainThread extends Thread {
         newHeight = (int) (canvas.getHeight() * 0.1f);
         foodBar = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false);
 
+
+        bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.pause_button);
+        int pauseButtonWidth = (int) (canvas.getWidth() * 0.1f);
+        int pauseButtonHeight = (int) (canvas.getHeight() * 0.1f);
+        pauseButton = Bitmap.createScaledBitmap(bmp, pauseButtonWidth, pauseButtonHeight, false);
+        pauseButtonX = (canvas.getWidth() / 2) - (pauseButtonWidth / 2);
+        pauseButtonY = 0;
+
+
         bmp = null;
+    }
+
+    private void renderPauseButton(Canvas canvas) {
+        canvas.drawBitmap(pauseButton, pauseButtonX, pauseButtonY, null);
     }
 
     private void addBugs(Canvas canvas) {
@@ -273,6 +353,9 @@ public class MainThread extends Thread {
         paint.setTextSize(100);
         paint.setTypeface(customTypeface);
         canvas.drawText(String.valueOf(score), 25, 120, paint);
+
+        // Draw Pause Button
+        renderPauseButton(canvas);
     }
 
     private void renderLives(Canvas canvas) {
