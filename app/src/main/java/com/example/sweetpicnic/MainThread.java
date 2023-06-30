@@ -498,5 +498,4 @@ public class MainThread extends Thread {
         Assets.mediaPlayer.start();
         }
     }
-
 }
