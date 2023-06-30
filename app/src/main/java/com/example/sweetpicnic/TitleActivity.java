@@ -11,7 +11,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class TitleActivity extends AppCompatActivity  implements View.OnClickListener {
+public class TitleActivity extends AppCompatActivity implements View.OnClickListener {
 
     Button startButton, preferencesButton;
     LinearLayout highScoreLayout;
@@ -21,8 +21,6 @@ public class TitleActivity extends AppCompatActivity  implements View.OnClickLis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_title);
-
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         startButton = findViewById(R.id.start_button);
         preferencesButton = findViewById(R.id.preferences_button);
@@ -44,6 +42,8 @@ public class TitleActivity extends AppCompatActivity  implements View.OnClickLis
         int highScore = preferences.getInt("high_score", 0);
         highScoreText.setText(String.valueOf(highScore));
 
+        Assets.isSoundsEnabled = preferences.getBoolean("key_sounds_enabled", true);
+
         playMusic();
     }
 
@@ -51,13 +51,14 @@ public class TitleActivity extends AppCompatActivity  implements View.OnClickLis
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         boolean musicEnabled = preferences.getBoolean("key_music_enabled", true);
+        if (Assets.mediaPlayer != null) {
+            Assets.mediaPlayer.release();
+            Assets.mediaPlayer = null;
+        }
+        Assets.mediaPlayer = MediaPlayer.create(this, R.raw.music_menu);
+        Assets.mediaPlayer.setLooping(true);
+
         if (musicEnabled == true) {
-            if (Assets.mediaPlayer != null) {
-                Assets.mediaPlayer.release();
-                Assets.mediaPlayer = null;
-            }
-            Assets.mediaPlayer = MediaPlayer.create (this, R.raw.music_menu);
-            Assets.mediaPlayer.setLooping(true);
             Assets.mediaPlayer.start();
         }
     }
@@ -82,7 +83,8 @@ public class TitleActivity extends AppCompatActivity  implements View.OnClickLis
                 Intent intent = new Intent(this, GameActivity.class);
                 startActivity(intent);
 
-                Assets.mediaPlayer.pause();
+                if (Assets.mediaPlayer != null)
+                    Assets.mediaPlayer.pause();
 
                 break;
             case R.id.high_score_layout:
