@@ -8,8 +8,7 @@
 |---|---|---|
 ![Splash Screen](./screenshots/splash_screen.png) | ![Welcome Screen](./screenshots/welcome_screen.png) 
 | ![High Score Screen](./screenshots/high_score_screen.png) | ![Preferences Screen](./screenshots/preferences_screen.png) 
-
-![Game Play](./screenshots/gameplay.gif)
+| ![Game Play](./screenshots/gameplay.gif) | |
 
 # Project Requirements
 
